@@ -1,10 +1,14 @@
 package com.mayuresh.sony.gpsmaps;
 
+import android.app.NotificationManager;
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.Menu;
 import android.widget.Toast;
@@ -42,22 +46,29 @@ import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
-    private GoogleMap mMap;
-    private GoogleApiClient mGoogleApiClient;
+    GoogleMap mMap;
+    GoogleApiClient mGoogleApiClient;
     LocationRequest mLocationRequest;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Intent in = new Intent(getApplicationContext(), service.class );
+        startService(in);
+
         Log.d("max", "in oncreate");
         setContentView(R.layout.activity_maps);
+
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
         Log.d("max", "end in oncreate");
+
+
     }
 
 
@@ -83,6 +94,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 .build();
         mGoogleApiClient.connect();
 
+//        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+//            @Override
+//            public void onMapClick(LatLng latLng) {
+//                addMarker(latLng);
+//                sendToServer(latLng);
+//            }
+//        });
 
         // Starting locations retrieve task
         new RetrieveTask().execute();
@@ -102,6 +120,60 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Log.d("max", "end addMarker");
     }
 
+//    private void sendToServer(LatLng latlng) {
+//        new SaveTask().execute(latlng);
+//    }
+//
+//
+//    // Background thread to save the location in remote MySQL server
+//    private class SaveTask extends AsyncTask<LatLng, Void, Void> {
+//        @Override
+//        protected Void doInBackground(LatLng... params) {
+//            String lat = Double.toString(params[0].latitude);
+//            String lng = Double.toString(params[0].longitude);
+//            String strUrl = "http://projectnoob.site88.net/save.php";
+//            URL url = null;
+//            try {
+//                url = new URL(strUrl);
+//
+//                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+//                connection.setRequestMethod("POST");
+//                connection.setDoOutput(true);
+//                OutputStreamWriter outputStreamWriter = new OutputStreamWriter(
+//                        connection.getOutputStream());
+//
+//                outputStreamWriter.write("lat=" + lat + "&lng="+lng);
+//                outputStreamWriter.flush();
+//                outputStreamWriter.close();
+//
+//                InputStream iStream = connection.getInputStream();
+//                BufferedReader reader = new BufferedReader(new
+//                        InputStreamReader(iStream));
+//
+//                StringBuffer sb = new StringBuffer();
+//
+//                String line = "";
+//
+//                while( (line = reader.readLine()) != null){
+//                    sb.append(line);
+//                }
+//
+//                reader.close();
+//                iStream.close();
+//
+//
+//            } catch (MalformedURLException e) {
+//                e.printStackTrace();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//
+//            return null;
+//        }
+//
+//    }
+//
+
     // Background task to retrieve locations from remote mysql server
 
     private class RetrieveTask extends AsyncTask<Void, Void, String> {
@@ -113,7 +185,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             StringBuffer sb = new StringBuffer();
             try {
                 Log.d("max", "in try");
-                String link = "http://convene.netne.net/retrieve.php";
+                String link = "http://projectnoob.site88.net/retrieve.php";
                 url = new URL(link);
                 URLConnection conn = url.openConnection();
                 conn.setDoOutput(true);
@@ -152,7 +224,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     // Background thread to parse the JSON data retrieved from MySQL server
     private class ParserTask extends AsyncTask<String, Void, List<HashMap<String, String>>>{
         @Override
-        protected List<HashMap<String,String>> doInBackground(String... params) {
+        protected List<HashMap<String, String>> doInBackground(String... params) {
             Log.d("max", "in Parser Task");
 
             MarkerJSONParser markerParser = new MarkerJSONParser();
